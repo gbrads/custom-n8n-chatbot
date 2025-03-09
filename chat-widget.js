@@ -3,12 +3,12 @@
     // Create and inject styles
     const styles = `
         .n8n-chat-widget {
-    --chat--color-primary: var(--n8n-chat-primary-color, #854fff);
-    --chat--color-secondary: var(--n8n-chat-secondary-color, #6b3fd4);
-    --chat--color-background: var(--n8n-chat-background-color, #ffffff);
-    --chat--color-font: var(--n8n-chat-font-color, #333333);
-    font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-}
+            --chat--color-primary: var(--n8n-chat-primary-color, #854fff);
+            --chat--color-secondary: var(--n8n-chat-secondary-color, #6b3fd4);
+            --chat--color-background: var(--n8n-chat-background-color, #ffffff);
+            --chat--color-font: var(--n8n-chat-font-color, #333333);
+            font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
 
         .n8n-chat-widget .chat-container {
             position: fixed;
@@ -301,8 +301,8 @@
             }
         },
         style: {
-            primaryColor: '',
-            secondaryColor: '',
+            primaryColor: '#7828ff',
+            secondaryColor: '#7828ff',
             position: 'right',
             backgroundColor: '#ffffff',
             fontColor: '#333333'
@@ -328,49 +328,31 @@
     widgetContainer.className = 'n8n-chat-widget';
     
     // Set CSS variables for colors
-widgetContainer.style.setProperty('--n8n-chat-primary-color', config.style.primaryColor);
-widgetContainer.style.setProperty('--n8n-chat-secondary-color', config.style.secondaryColor);
-widgetContainer.style.setProperty('--n8n-chat-background-color', config.style.backgroundColor);
-widgetContainer.style.setProperty('--n8n-chat-font-color', config.style.fontColor);
-
-// Force a reflow to ensure styles are applied
-widgetContainer.offsetHeight;
-
-    // Add this after you've appended the widgetContainer to the document
-const customButtonStyle = document.createElement('style');
-customButtonStyle.textContent = `
-  .n8n-chat-widget .new-chat-btn {
-    background: linear-gradient(135deg, ${config.style.primaryColor} 0%, ${config.style.secondaryColor} 100%) !important;
-  }
-  .n8n-chat-widget .chat-input button {
-    background: linear-gradient(135deg, ${config.style.primaryColor} 0%, ${config.style.secondaryColor} 100%) !important;
-  }
-  .n8n-chat-widget .chat-toggle {
-    background: linear-gradient(135deg, ${config.style.primaryColor} 0%, ${config.style.secondaryColor} 100%) !important;
-  }
-`;
-document.head.appendChild(customButtonStyle);
+    widgetContainer.style.setProperty('--n8n-chat-primary-color', config.style.primaryColor);
+    widgetContainer.style.setProperty('--n8n-chat-secondary-color', config.style.secondaryColor);
+    widgetContainer.style.setProperty('--n8n-chat-background-color', config.style.backgroundColor);
+    widgetContainer.style.setProperty('--n8n-chat-font-color', config.style.fontColor);
 
     const chatContainer = document.createElement('div');
     chatContainer.className = `chat-container${config.style.position === 'left' ? ' position-left' : ''}`;
     
     const newConversationHTML = `
-    <div class="brand-header">
-        <img src="${config.branding.logo}" alt="${config.branding.name}">
-        <span>${config.branding.name}</span>
-        <button class="close-button">×</button>
-    </div>
-    <div class="new-conversation">
-        <h2 class="welcome-text">${config.branding.welcomeText}</h2>
-        <button class="new-chat-btn" style="background: linear-gradient(135deg, ${config.style.primaryColor} 0%, ${config.style.secondaryColor} 100%)">
-            <svg class="message-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.2L4 17.2V4h16v12z"/>
-            </svg>
-            Send us a message
-        </button>
-        <p class="response-text">${config.branding.responseTimeText}</p>
-    </div>
-`;
+        <div class="brand-header">
+            <img src="${config.branding.logo}" alt="${config.branding.name}">
+            <span>${config.branding.name}</span>
+            <button class="close-button">×</button>
+        </div>
+        <div class="new-conversation">
+            <h2 class="welcome-text">${config.branding.welcomeText}</h2>
+            <button class="new-chat-btn">
+                <svg class="message-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.2L4 17.2V4h16v12z"/>
+                </svg>
+                Send us a message
+            </button>
+            <p class="response-text">${config.branding.responseTimeText}</p>
+        </div>
+    `;
 
     const chatInterfaceHTML = `
         <div class="chat-interface">
@@ -403,12 +385,7 @@ document.head.appendChild(customButtonStyle);
     widgetContainer.appendChild(toggleButton);
     document.body.appendChild(widgetContainer);
 
-// After creating the new chat button
-// Find this part in your code where you're getting the newChatBtn element
-const newChatBtn = chatContainer.querySelector('.new-chat-btn');
-
-// Add this line immediately after to directly set the gradient on the button
-newChatBtn.style.background = `linear-gradient(135deg, ${config.style.primaryColor} 0%, ${config.style.secondaryColor} 100%)`;
+    const newChatBtn = chatContainer.querySelector('.new-chat-btn');
     const chatInterface = chatContainer.querySelector('.chat-interface');
     const messagesContainer = chatContainer.querySelector('.chat-messages');
     const textarea = chatContainer.querySelector('textarea');
