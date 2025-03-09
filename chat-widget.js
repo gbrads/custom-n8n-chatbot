@@ -3,12 +3,12 @@
     // Create and inject styles
     const styles = `
         .n8n-chat-widget {
-            --chat--color-primary: var(--n8n-chat-primary-color, #854fff);
-            --chat--color-secondary: var(--n8n-chat-secondary-color, #6b3fd4);
-            --chat--color-background: var(--n8n-chat-background-color, #ffffff);
-            --chat--color-font: var(--n8n-chat-font-color, #333333);
-            font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-        }
+    --chat--color-primary: var(--n8n-chat-primary-color, #854fff);
+    --chat--color-secondary: var(--n8n-chat-secondary-color, #6b3fd4);
+    --chat--color-background: var(--n8n-chat-background-color, #ffffff);
+    --chat--color-font: var(--n8n-chat-font-color, #333333);
+    font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
 
         .n8n-chat-widget .chat-container {
             position: fixed;
@@ -328,10 +328,13 @@
     widgetContainer.className = 'n8n-chat-widget';
     
     // Set CSS variables for colors
-    widgetContainer.style.setProperty('--n8n-chat-primary-color', config.style.primaryColor);
-    widgetContainer.style.setProperty('--n8n-chat-secondary-color', config.style.secondaryColor);
-    widgetContainer.style.setProperty('--n8n-chat-background-color', config.style.backgroundColor);
-    widgetContainer.style.setProperty('--n8n-chat-font-color', config.style.fontColor);
+widgetContainer.style.setProperty('--n8n-chat-primary-color', config.style.primaryColor);
+widgetContainer.style.setProperty('--n8n-chat-secondary-color', config.style.secondaryColor);
+widgetContainer.style.setProperty('--n8n-chat-background-color', config.style.backgroundColor);
+widgetContainer.style.setProperty('--n8n-chat-font-color', config.style.fontColor);
+
+// Force a reflow to ensure styles are applied
+widgetContainer.offsetHeight;
 
     const chatContainer = document.createElement('div');
     chatContainer.className = `chat-container${config.style.position === 'left' ? ' position-left' : ''}`;
