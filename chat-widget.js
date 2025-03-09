@@ -389,7 +389,10 @@ widgetContainer.offsetHeight;
     document.body.appendChild(widgetContainer);
 
 // After creating the new chat button
+// Find this part in your code where you're getting the newChatBtn element
 const newChatBtn = chatContainer.querySelector('.new-chat-btn');
+
+// Add this line immediately after to directly set the gradient on the button
 newChatBtn.style.background = `linear-gradient(135deg, ${config.style.primaryColor} 0%, ${config.style.secondaryColor} 100%)`;
     const chatInterface = chatContainer.querySelector('.chat-interface');
     const messagesContainer = chatContainer.querySelector('.chat-messages');
