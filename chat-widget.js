@@ -388,7 +388,9 @@ widgetContainer.offsetHeight;
     widgetContainer.appendChild(toggleButton);
     document.body.appendChild(widgetContainer);
 
-    const newChatBtn = chatContainer.querySelector('.new-chat-btn');
+// After creating the new chat button
+const newChatBtn = chatContainer.querySelector('.new-chat-btn');
+newChatBtn.style.background = `linear-gradient(135deg, ${config.style.primaryColor} 0%, ${config.style.secondaryColor} 100%)`;
     const chatInterface = chatContainer.querySelector('.chat-interface');
     const messagesContainer = chatContainer.querySelector('.chat-messages');
     const textarea = chatContainer.querySelector('textarea');
