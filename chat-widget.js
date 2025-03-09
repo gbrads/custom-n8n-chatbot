@@ -336,6 +336,21 @@ widgetContainer.style.setProperty('--n8n-chat-font-color', config.style.fontColo
 // Force a reflow to ensure styles are applied
 widgetContainer.offsetHeight;
 
+    // Add this after you've appended the widgetContainer to the document
+const customButtonStyle = document.createElement('style');
+customButtonStyle.textContent = `
+  .n8n-chat-widget .new-chat-btn {
+    background: linear-gradient(135deg, ${config.style.primaryColor} 0%, ${config.style.secondaryColor} 100%) !important;
+  }
+  .n8n-chat-widget .chat-input button {
+    background: linear-gradient(135deg, ${config.style.primaryColor} 0%, ${config.style.secondaryColor} 100%) !important;
+  }
+  .n8n-chat-widget .chat-toggle {
+    background: linear-gradient(135deg, ${config.style.primaryColor} 0%, ${config.style.secondaryColor} 100%) !important;
+  }
+`;
+document.head.appendChild(customButtonStyle);
+
     const chatContainer = document.createElement('div');
     chatContainer.className = `chat-container${config.style.position === 'left' ? ' position-left' : ''}`;
     
