@@ -328,13 +328,8 @@
     widgetContainer.className = 'n8n-chat-widget';
     
     // Set CSS variables for colors
-    if (config.style.primaryColor) {
     widgetContainer.style.setProperty('--n8n-chat-primary-color', config.style.primaryColor);
-}
-if (config.style.secondaryColor) {
     widgetContainer.style.setProperty('--n8n-chat-secondary-color', config.style.secondaryColor);
-}
-
     widgetContainer.style.setProperty('--n8n-chat-background-color', config.style.backgroundColor);
     widgetContainer.style.setProperty('--n8n-chat-font-color', config.style.fontColor);
 
