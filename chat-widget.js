@@ -418,6 +418,10 @@
             });
 
             const responseData = await response.json();
+
+                    console.log('[CHAT] startNewConversation response:', responseData);
+
+            
             chatContainer.querySelector('.brand-header').style.display = 'none';
             chatContainer.querySelector('.new-conversation').style.display = 'none';
             chatInterface.classList.add('active');
