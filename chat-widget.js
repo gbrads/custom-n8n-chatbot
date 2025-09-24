@@ -271,8 +271,6 @@
         .n8n-chat-widget .chat-footer a:hover {
             opacity: 1;
         }
-        /* Kill truly empty bot bubbles */
-.n8n-chat-widget .chat-message.bot:empty { display: none; }
     `;
 
     // Load Geist font
@@ -298,13 +296,13 @@
             welcomeText: '',
             responseTimeText: '',
             poweredBy: {
-                text: 'Powered by Mad',
-                link: 'https://n8n.partnerlinks.io/m8a94i19zhqq?utm_source=nocodecreative.io'
+                text: 'Powered by YoAI',
+                link: 'https://itsyoaimate.netlify.app/'
             }
         },
         style: {
-            primaryColor: '',
-            secondaryColor: '',
+            primaryColor: '#7828ff',
+            secondaryColor: '#7828ff',
             position: 'right',
             backgroundColor: '#ffffff',
             fontColor: '#333333'
@@ -397,89 +395,40 @@
         return crypto.randomUUID();
     }
 
-    // async function startNewConversation() {
-    //     currentSessionId = generateUUID();
-    //     const data = [{
-    //         action: "loadPreviousSession",
-    //         sessionId: currentSessionId,
-    //         route: config.webhook.route,
-    //         metadata: {
-    //             userId: ""
-    //         }
-    //     }];
+    async function startNewConversation() {
+        currentSessionId = generateUUID();
+        const data = [{
+            action: "loadPreviousSession",
+            sessionId: currentSessionId,
+            route: config.webhook.route,
+            metadata: {
+                userId: ""
+            }
+        }];
 
-    //     try {
-    //         const response = await fetch(config.webhook.url, {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json'
-    //             },
-    //             body: JSON.stringify(data)
-    //         });
+        try {
+            const response = await fetch(config.webhook.url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
 
-    //         const responseData = await response.json();
+            const responseData = await response.json();
+            chatContainer.querySelector('.brand-header').style.display = 'none';
+            chatContainer.querySelector('.new-conversation').style.display = 'none';
+            chatInterface.classList.add('active');
 
-    //                 console.log('[CHAT] startNewConversation response:', responseData);
-
-            
-    //         chatContainer.querySelector('.brand-header').style.display = 'none';
-    //         chatContainer.querySelector('.new-conversation').style.display = 'none';
-    //         chatInterface.classList.add('active');
-
-    //         const botMessageDiv = document.createElement('div');
-    //         botMessageDiv.className = 'chat-message bot';
-    //         botMessageDiv.textContent = Array.isArray(responseData) ? responseData[0].output : responseData.output;
-    //         messagesContainer.appendChild(botMessageDiv);
-    //         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    //     } catch (error) {
-    //         console.error('Error:', error);
-    //     }
-    // }
-
-   async function startNewConversation() {
-  currentSessionId = generateUUID();
-
-  // Hosted Chat expects an ARRAY with these keys on open:
-  const data = [{
-    action: "loadPreviousSession",
-    chatInputKey: "chatInput",
-    chatSessionKey: "sessionId",
-    sessionId: currentSessionId,
-    metadata: { userId: "" }
-  }];
-
-  try {
-    const res = await fetch(config.webhook.url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
-
-    console.log("[CHAT][open status]", res.status);
-    if (!res.ok) return; // don't create a blank bubble on 500
-
-    const responseData = await res.json();
-
-    chatContainer.querySelector(".brand-header").style.display = "none";
-    chatContainer.querySelector(".new-conversation").style.display = "none";
-    chatInterface.classList.add("active");
-
-    const botText = Array.isArray(responseData)
-      ? (responseData[0]?.output ?? responseData[0]?.text ?? "")
-      : (responseData?.output ?? responseData?.text ?? "");
-
-    if (!botText || !botText.trim()) return;
-
-    const botDiv = document.createElement("div");
-    botDiv.className = "chat-message bot";
-    botDiv.textContent = botText;
-    messagesContainer.appendChild(botDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  } catch (e) {
-    console.error("startNewConversation error:", e);
-  }
-}
-
+            const botMessageDiv = document.createElement('div');
+            botMessageDiv.className = 'chat-message bot';
+            botMessageDiv.textContent = Array.isArray(responseData) ? responseData[0].output : responseData.output;
+            messagesContainer.appendChild(botMessageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
 
     async function sendMessage(message) {
         const messageData = {
@@ -543,7 +492,6 @@
     toggleButton.addEventListener('click', () => {
         chatContainer.classList.toggle('open');
     });
-
 
     // Add close button handlers
     const closeButtons = chatContainer.querySelectorAll('.close-button');
