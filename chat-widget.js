@@ -500,7 +500,10 @@ async function postToWebhook(url, payload) {
     //     }
     // }
 
-    async function startNewConversation() {
+async function startNewConversation() {
+  if (isStarting) return; // debounce
+  isStarting = true;
+
   currentSessionId = generateUUID();
   const data = [{
     action: "loadPreviousSession",
@@ -517,10 +520,11 @@ async function postToWebhook(url, payload) {
     chatContainer.querySelector('.new-conversation').style.display = 'none';
     chatInterface.classList.add('active');
 
-    // If there is previous content, render it (non-empty only).
+    // Try previous content first
     const maybe = extractOutput(responseData);
-    if (maybe.trim()) {
+    if (maybe) {
       appendBotMessage(messagesContainer, maybe);
+      isStarting = false;
       return;
     }
 
@@ -529,16 +533,17 @@ async function postToWebhook(url, payload) {
       action: "sendMessage",
       sessionId: currentSessionId,
       route: config.webhook.route,
-      chatInput: "__init__", // adjust if you prefer a different trigger
+      chatInput: "__init__",
       metadata: { userId: "" }
     };
 
     const initRes = await postToWebhook(config.webhook.url, initPayload);
     const initOut = extractOutput(initRes);
     appendBotMessage(messagesContainer, initOut);
-
   } catch (error) {
     console.error('Error:', error);
+  } finally {
+    isStarting = false;
   }
 }
 
