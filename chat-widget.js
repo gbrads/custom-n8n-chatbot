@@ -415,16 +415,37 @@
                 body: JSON.stringify(data)
             });
 
+            // const responseData = await response.json();
+            // chatContainer.querySelector('.brand-header').style.display = 'none';
+            // chatContainer.querySelector('.new-conversation').style.display = 'none';
+            // chatInterface.classList.add('active');
+
+            // const botMessageDiv = document.createElement('div');
+            // botMessageDiv.className = 'chat-message bot';
+            // botMessageDiv.textContent = Array.isArray(responseData) ? responseData[0].output : responseData.output;
+            // messagesContainer.appendChild(botMessageDiv);
+            // messagesContainer.scrollTop = messagesContainer.scrollHeight;
             const responseData = await response.json();
             chatContainer.querySelector('.brand-header').style.display = 'none';
             chatContainer.querySelector('.new-conversation').style.display = 'none';
             chatInterface.classList.add('active');
-
+            
+            // 🔥 Hard-coded first message (always shows)
             const botMessageDiv = document.createElement('div');
             botMessageDiv.className = 'chat-message bot';
-            botMessageDiv.textContent = Array.isArray(responseData) ? responseData[0].output : responseData.output;
+            botMessageDiv.textContent = "Hi, how can I help you today?";
             messagesContainer.appendChild(botMessageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // (Optional) If you still want to ALSO show webhook response, keep this block:
+            if (responseData && (responseData.output || (Array.isArray(responseData) && responseData[0].output))) {
+                const webhookMessageDiv = document.createElement('div');
+                webhookMessageDiv.className = 'chat-message bot';
+                webhookMessageDiv.textContent = Array.isArray(responseData) ? responseData[0].output : responseData.output;
+                messagesContainer.appendChild(webhookMessageDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
         } catch (error) {
             console.error('Error:', error);
         }
