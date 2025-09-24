@@ -436,51 +436,50 @@
     //     }
     // }
 
-    async function startNewConversation() {
+   async function startNewConversation() {
   currentSessionId = generateUUID();
 
-  // n8n Hosted Chat expects this exact shape:
+  // Hosted Chat expects an ARRAY with these keys on open:
   const data = [{
-  action: "loadPreviousSession",
-  chatInputKey: "chatInput",     // required by n8n Hosted Chat
-  chatSessionKey: "sessionId",   // required by n8n Hosted Chat
-  sessionId: currentSessionId,
-  metadata: { userId: "" }
-}];
+    action: "loadPreviousSession",
+    chatInputKey: "chatInput",
+    chatSessionKey: "sessionId",
+    sessionId: currentSessionId,
+    metadata: { userId: "" }
+  }];
 
   try {
-  const res = await fetch(config.webhook.url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data) // <-- array with the two keys
-  });
+    const res = await fetch(config.webhook.url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
 
-  // one minimal log so you can see why if it fails
-  console.log('[CHAT][open status]', res.status);
+    console.log("[CHAT][open status]", res.status);
+    if (!res.ok) return; // don't create a blank bubble on 500
 
-  if (!res.ok) return; // don't create a blank bubble on 500
+    const responseData = await res.json();
 
-  const responseData = await res.json();
+    chatContainer.querySelector(".brand-header").style.display = "none";
+    chatContainer.querySelector(".new-conversation").style.display = "none";
+    chatInterface.classList.add("active");
 
-  chatContainer.querySelector('.brand-header').style.display = 'none';
-  chatContainer.querySelector('.new-conversation').style.display = 'none';
-  chatInterface.classList.add('active');
+    const botText = Array.isArray(responseData)
+      ? (responseData[0]?.output ?? responseData[0]?.text ?? "")
+      : (responseData?.output ?? responseData?.text ?? "");
 
-  const botText = Array.isArray(responseData)
-    ? (responseData[0]?.output ?? responseData[0]?.text ?? '')
-    : (responseData?.output ?? responseData?.text ?? '');
+    if (!botText || !botText.trim()) return;
 
-  if (!botText || !botText.trim()) return; // skip empty
-
-  const botMessageDiv = document.createElement('div');
-  botMessageDiv.className = 'chat-message bot';
-  botMessageDiv.textContent = botText;
-  messagesContainer.appendChild(botMessageDiv);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
-} catch (error) {
-  console.error('Error:', error);
+    const botDiv = document.createElement("div");
+    botDiv.className = "chat-message bot";
+    botDiv.textContent = botText;
+    messagesContainer.appendChild(botDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  } catch (e) {
+    console.error("startNewConversation error:", e);
+  }
 }
-}
+
 
     async function sendMessage(message) {
         const messageData = {
