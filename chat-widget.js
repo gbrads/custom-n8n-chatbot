@@ -639,6 +639,23 @@ async function startNewConversation() {
         chatContainer.classList.toggle('open');
     });
 
+    (function () {
+  const _appendChild = Element.prototype.appendChild;
+  Element.prototype.appendChild = function(child) {
+    try {
+      if (child?.classList?.contains('chat-message') && child.classList.contains('bot')) {
+        const txt = __stripBlank(child.innerHTML || child.textContent || '');
+        if (!txt) {
+          console.warn('[Chat] Empty bot bubble appended by:', this);
+          console.trace();
+        }
+      }
+    } catch (_) {}
+    return _appendChild.call(this, child);
+  };
+})();
+
+
     // Add close button handlers
     const closeButtons = chatContainer.querySelectorAll('.close-button');
     closeButtons.forEach(button => {
