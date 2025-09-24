@@ -272,6 +272,7 @@
             opacity: 1;
         }
     `;
+
   // Load Geist font
   const fontLink = document.createElement('link');
   fontLink.rel = 'stylesheet';
@@ -516,3 +517,4 @@
     });
   });
 })();
+
