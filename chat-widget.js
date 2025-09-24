@@ -279,13 +279,13 @@
   fontLink.href = 'https://cdn.jsdelivr.net/npm/geist@1.0.0/dist/fonts/geist-sans/style.css';
   document.head.appendChild(fontLink);
 
-  // Default configuration
+  // Config (webhook kept only as shape, but unused)
   const defaultConfig = {
     webhook: { url: '', route: '' },
     branding: {
       logo: '',
       name: '',
-      welcomeText: '',
+      welcomeText: 'Hi, how can I help you today?', // default greeting
       responseTimeText: '',
       poweredBy: { text: 'Powered by YoAI', link: 'https://itsyoaimate.netlify.app/' }
     },
@@ -298,7 +298,6 @@
     }
   };
 
-  // Merge user config with defaults
   const config = window.ChatWidgetConfig
     ? {
         webhook: { ...defaultConfig.webhook, ...window.ChatWidgetConfig.webhook },
@@ -311,18 +310,17 @@
   window.N8NChatWidgetInitialized = true;
 
   let currentSessionId = '';
-  let hasStarted = false; // prevents duplicate greetings
+  let hasStarted = false;
 
-  // Create widget container
+  // Root container
   const widgetContainer = document.createElement('div');
   widgetContainer.className = 'n8n-chat-widget';
-
-  // Set CSS variables for colors
   widgetContainer.style.setProperty('--n8n-chat-primary-color', config.style.primaryColor);
   widgetContainer.style.setProperty('--n8n-chat-secondary-color', config.style.secondaryColor);
   widgetContainer.style.setProperty('--n8n-chat-background-color', config.style.backgroundColor);
   widgetContainer.style.setProperty('--n8n-chat-font-color', config.style.fontColor);
 
+  // Shell
   const chatContainer = document.createElement('div');
   chatContainer.className = `chat-container${config.style.position === 'left' ? ' position-left' : ''}`;
 
@@ -333,14 +331,14 @@
       <button class="close-button">×</button>
     </div>
     <div class="new-conversation">
-      <h2 class="welcome-text">${config.branding.welcomeText}</h2>
+      <h2 class="welcome-text">${config.branding.welcomeText || 'Hi, how can I help you today?'}</h2>
       <button class="new-chat-btn">
         <svg class="message-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
           <path fill="currentColor" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.2L4 17.2V4h16v12z"/>
         </svg>
         Send us a message
       </button>
-      <p class="response-text">${config.branding.responseTimeText}</p>
+      <p class="response-text">${config.branding.responseTimeText || ''}</p>
     </div>
   `;
 
@@ -364,6 +362,7 @@
 
   chatContainer.innerHTML = newConversationHTML + chatInterfaceHTML;
 
+  // Launcher
   const toggleButton = document.createElement('button');
   toggleButton.className = `chat-toggle${config.style.position === 'left' ? ' position-left' : ''}`;
   toggleButton.innerHTML = `
@@ -375,21 +374,21 @@
   widgetContainer.appendChild(toggleButton);
   document.body.appendChild(widgetContainer);
 
-  // DOM refs
+  // Refs
   const newChatBtn = chatContainer.querySelector('.new-chat-btn');
   const chatInterface = chatContainer.querySelector('.chat-interface');
   const messagesContainer = chatContainer.querySelector('.chat-messages');
   const textarea = chatContainer.querySelector('textarea');
   const sendButton = chatContainer.querySelector('button[type="submit"]');
 
+  // Utils
   function generateUUID() {
     return crypto.randomUUID();
   }
 
-  // --- Helpers ---
   function addBotMessage(text) {
     const safe = (text ?? '').toString().trim();
-    if (!safe) return; // don't add empty bubbles
+    if (!safe) return; // never append empty
     const div = document.createElement('div');
     div.className = 'chat-message bot';
     div.textContent = safe;
@@ -400,8 +399,7 @@
   function removeEmptyBotBubbles() {
     const nodes = messagesContainer.querySelectorAll('.chat-message.bot');
     nodes.forEach(n => {
-      const txt = (n.textContent ?? '').trim();
-      if (!txt) n.remove();
+      if (!(n.textContent || '').trim()) n.remove();
     });
   }
 
@@ -409,34 +407,30 @@
     return messagesContainer.children.length > 0;
   }
 
-  // --- Start conversation WITHOUT webhook on open ---
+  // Start (no network)
   async function startNewConversation() {
-    if (hasStarted) return; // prevent duplicates if user clicks twice
+    if (hasStarted) return;
     hasStarted = true;
 
     currentSessionId = generateUUID();
+
     chatContainer.classList.add('open');
 
-    // Hide the landing view, show chat UI
+    // Switch UI
     const allHeaders = chatContainer.querySelectorAll('.brand-header');
     allHeaders.forEach(h => (h.style.display = 'none'));
     const newConversationEl = chatContainer.querySelector('.new-conversation');
     if (newConversationEl) newConversationEl.style.display = 'none';
     chatInterface.classList.add('active');
 
-    // Clean any stray empties (defensive)
+    // Clean any rogue empties from other scripts
     removeEmptyBotBubbles();
 
     // Guaranteed greeting
-    const greeting =
-      (config.branding && config.branding.welcomeText && config.branding.welcomeText.trim())
-        ? config.branding.welcomeText
-        : 'Hi, how can I help you today?';
-
-    addBotMessage(greeting);
+    addBotMessage(config.branding.welcomeText || 'Hi, how can I help you today?');
   }
 
-  // Send message (optional webhook support)
+  // Send (no network; local demo response)
   async function sendMessage(message) {
     const msg = (message ?? '').toString().trim();
     if (!msg) return;
@@ -447,35 +441,10 @@
     messagesContainer.appendChild(userMessageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-    // If you DON'T want webhook responses at all, comment this block and add a local reply instead
-    if (config.webhook && config.webhook.url) {
-      try {
-        const response = await fetch(config.webhook.url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'sendMessage',
-            sessionId: currentSessionId,
-            route: config.webhook.route,
-            chatInput: msg,
-            metadata: { userId: '' }
-          })
-        });
-
-        let data = null;
-        try { data = await response.json(); } catch (_) { data = null; }
-
-        const maybeOutput = Array.isArray(data) ? data?.[0]?.output : data?.output;
-        if (maybeOutput && String(maybeOutput).trim()) {
-          addBotMessage(maybeOutput);
-        }
-      } catch (err) {
-        console.error('Webhook error:', err);
-      }
-    } else {
-      // Local fallback demo response
-      addBotMessage('Thanks! (demo response)');
-    }
+    // Local canned reply (replace with your logic if needed)
+    setTimeout(() => {
+      addBotMessage('Thanks! A teammate will reply shortly.');
+    }, 200);
   }
 
   // Events
@@ -500,13 +469,11 @@
     }
   });
 
-  // If user opens via floating toggle, auto-start if not started yet
+  // Auto-start on launcher open (so greeting appears even if they skip the CTA button)
   toggleButton.addEventListener('click', () => {
     const willOpen = !chatContainer.classList.contains('open');
     chatContainer.classList.toggle('open');
-    if (willOpen && !hasStarted) {
-      startNewConversation();
-    }
+    if (willOpen && !hasStarted) startNewConversation();
   });
 
   // Close buttons
@@ -517,4 +484,3 @@
     });
   });
 })();
-
