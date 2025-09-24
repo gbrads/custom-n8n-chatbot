@@ -395,61 +395,126 @@
         return crypto.randomUUID();
     }
 
+    // async function startNewConversation() {
+    //     currentSessionId = generateUUID();
+    //     const data = [{
+    //         action: "loadPreviousSession",
+    //         sessionId: currentSessionId,
+    //         route: config.webhook.route,
+    //         metadata: {
+    //             userId: ""
+    //         }
+    //     }];
+
+    //     try {
+    //         const response = await fetch(config.webhook.url, {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify(data)
+    //         });
+
+    //         // const responseData = await response.json();
+    //         // chatContainer.querySelector('.brand-header').style.display = 'none';
+    //         // chatContainer.querySelector('.new-conversation').style.display = 'none';
+    //         // chatInterface.classList.add('active');
+
+    //         // const botMessageDiv = document.createElement('div');
+    //         // botMessageDiv.className = 'chat-message bot';
+    //         // botMessageDiv.textContent = Array.isArray(responseData) ? responseData[0].output : responseData.output;
+    //         // messagesContainer.appendChild(botMessageDiv);
+    //         // messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    //         const responseData = await response.json();
+    //         chatContainer.querySelector('.brand-header').style.display = 'none';
+    //         chatContainer.querySelector('.new-conversation').style.display = 'none';
+    //         chatInterface.classList.add('active');
+            
+    //         // 🔥 Hard-coded first message (always shows)
+    //         const botMessageDiv = document.createElement('div');
+    //         botMessageDiv.className = 'chat-message bot';
+    //         botMessageDiv.textContent = "Hi, how can I help you today?";
+    //         messagesContainer.appendChild(botMessageDiv);
+    //         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+    //         // (Optional) If you still want to ALSO show webhook response, keep this block:
+    //         if (responseData && (responseData.output || (Array.isArray(responseData) && responseData[0].output))) {
+    //             const webhookMessageDiv = document.createElement('div');
+    //             webhookMessageDiv.className = 'chat-message bot';
+    //             webhookMessageDiv.textContent = Array.isArray(responseData) ? responseData[0].output : responseData.output;
+    //             messagesContainer.appendChild(webhookMessageDiv);
+    //             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    //         }
+
+    //     } catch (error) {
+    //         console.error('Error:', error);
+    //     }
+    // }
+
     async function startNewConversation() {
-        currentSessionId = generateUUID();
+    currentSessionId = generateUUID();
+
+    // Ensure the widget is open (defensive)
+    chatContainer.classList.add('open');
+
+    // 1) Switch UI immediately (so greeting always shows)
+    const allHeaders = chatContainer.querySelectorAll('.brand-header');
+    allHeaders.forEach(h => h.style.display = 'none');
+
+    const newConversationEl = chatContainer.querySelector('.new-conversation');
+    if (newConversationEl) newConversationEl.style.display = 'none';
+
+    chatInterface.classList.add('active');
+
+    // 2) Hard-coded first message (guaranteed to render)
+    const botMessageDiv = document.createElement('div');
+    botMessageDiv.className = 'chat-message bot';
+    botMessageDiv.textContent = (config.branding && config.branding.welcomeText)
+        ? config.branding.welcomeText
+        : "Hi, how can I help you today?";
+    messagesContainer.appendChild(botMessageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    // 3) Fire webhook in the background (non-blocking UI)
+    if (config.webhook && config.webhook.url) {
         const data = [{
             action: "loadPreviousSession",
             sessionId: currentSessionId,
             route: config.webhook.route,
-            metadata: {
-                userId: ""
-            }
+            metadata: { userId: "" }
         }];
 
         try {
             const response = await fetch(config.webhook.url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
 
-            // const responseData = await response.json();
-            // chatContainer.querySelector('.brand-header').style.display = 'none';
-            // chatContainer.querySelector('.new-conversation').style.display = 'none';
-            // chatInterface.classList.add('active');
+            // json() can throw if empty response; guard it
+            let responseData = null;
+            try { responseData = await response.json(); } catch (_) {}
 
-            // const botMessageDiv = document.createElement('div');
-            // botMessageDiv.className = 'chat-message bot';
-            // botMessageDiv.textContent = Array.isArray(responseData) ? responseData[0].output : responseData.output;
-            // messagesContainer.appendChild(botMessageDiv);
-            // messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            const responseData = await response.json();
-            chatContainer.querySelector('.brand-header').style.display = 'none';
-            chatContainer.querySelector('.new-conversation').style.display = 'none';
-            chatInterface.classList.add('active');
-            
-            // 🔥 Hard-coded first message (always shows)
-            const botMessageDiv = document.createElement('div');
-            botMessageDiv.className = 'chat-message bot';
-            botMessageDiv.textContent = "Hi, how can I help you today?";
-            messagesContainer.appendChild(botMessageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            
-            // (Optional) If you still want to ALSO show webhook response, keep this block:
-            if (responseData && (responseData.output || (Array.isArray(responseData) && responseData[0].output))) {
+            // If your webhook ALSO returns a message, append it (optional)
+            if (responseData && (responseData.output ||
+                (Array.isArray(responseData) && responseData[0] && responseData[0].output))) {
+
                 const webhookMessageDiv = document.createElement('div');
                 webhookMessageDiv.className = 'chat-message bot';
-                webhookMessageDiv.textContent = Array.isArray(responseData) ? responseData[0].output : responseData.output;
+                webhookMessageDiv.textContent = Array.isArray(responseData)
+                    ? responseData[0].output
+                    : responseData.output;
+
                 messagesContainer.appendChild(webhookMessageDiv);
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
-
-        } catch (error) {
-            console.error('Error:', error);
+        } catch (err) {
+            console.error('Webhook error:', err);
+            // intentionally no UI change; greeting already shown
         }
     }
+}
+
 
     async function sendMessage(message) {
         const messageData = {
