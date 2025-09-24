@@ -441,46 +441,45 @@
 
   // n8n Hosted Chat expects this exact shape:
   const data = [{
-    action: "loadPreviousSession",
-    chatInputKey: "chatInput",     // <- required
-    chatSessionKey: "sessionId",   // <- required
-    sessionId: currentSessionId,
-    metadata: { userId: "" }
-  }];
+  action: "loadPreviousSession",
+  chatInputKey: "chatInput",     // required by n8n Hosted Chat
+  chatSessionKey: "sessionId",   // required by n8n Hosted Chat
+  sessionId: currentSessionId,
+  metadata: { userId: "" }
+}];
 
   try {
-    const res = await fetch(config.webhook.url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
+  const res = await fetch(config.webhook.url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data) // <-- array with the two keys
+  });
 
-    // one simple log so you can see status (and why if it fails)
-    if (!res.ok) {
-      console.log("[CHAT][open failed]", res.status, await res.text());
-      return;
-    }
+  // one minimal log so you can see why if it fails
+  console.log('[CHAT][open status]', res.status);
 
-    const responseData = await res.json();
+  if (!res.ok) return; // don't create a blank bubble on 500
 
-    chatContainer.querySelector('.brand-header').style.display = 'none';
-    chatContainer.querySelector('.new-conversation').style.display = 'none';
-    chatInterface.classList.add('active');
+  const responseData = await res.json();
 
-    const botText = Array.isArray(responseData)
-      ? (responseData[0]?.output ?? responseData[0]?.text ?? "")
-      : (responseData?.output ?? responseData?.text ?? "");
+  chatContainer.querySelector('.brand-header').style.display = 'none';
+  chatContainer.querySelector('.new-conversation').style.display = 'none';
+  chatInterface.classList.add('active');
 
-    if (botText && botText.trim()) {
-      const botDiv = document.createElement('div');
-      botDiv.className = 'chat-message bot';
-      botDiv.textContent = botText;
-      messagesContainer.appendChild(botDiv);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-  } catch (e) {
-    console.error("startNewConversation error:", e);
-  }
+  const botText = Array.isArray(responseData)
+    ? (responseData[0]?.output ?? responseData[0]?.text ?? '')
+    : (responseData?.output ?? responseData?.text ?? '');
+
+  if (!botText || !botText.trim()) return; // skip empty
+
+  const botMessageDiv = document.createElement('div');
+  botMessageDiv.className = 'chat-message bot';
+  botMessageDiv.textContent = botText;
+  messagesContainer.appendChild(botMessageDiv);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+} catch (error) {
+  console.error('Error:', error);
+}
 }
 
     async function sendMessage(message) {
