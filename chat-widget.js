@@ -494,7 +494,7 @@
     // });
 
 
-    let conversationStarted = false;
+let conversationStarted = false;
 
 toggleButton.addEventListener('click', () => {
     chatContainer.classList.toggle('open');
