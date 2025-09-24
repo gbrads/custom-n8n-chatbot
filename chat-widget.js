@@ -271,6 +271,8 @@
         .n8n-chat-widget .chat-footer a:hover {
             opacity: 1;
         }
+        /* Kill truly empty bot bubbles */
+.n8n-chat-widget .chat-message.bot:empty { display: none; }
     `;
 
     // Load Geist font
