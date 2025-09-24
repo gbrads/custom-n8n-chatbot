@@ -397,152 +397,78 @@
         return crypto.randomUUID();
     }
 
-    // async function startNewConversation() {
-    //     currentSessionId = generateUUID();
-    //     const data = [{
-    //         action: "loadPreviousSession",
-    //         sessionId: currentSessionId,
-    //         route: config.webhook.route,
-    //         metadata: {
-    //             userId: ""
-    //         }
-    //     }];
+    async function startNewConversation() {
+        currentSessionId = generateUUID();
+        const data = [{
+            action: "loadPreviousSession",
+            sessionId: currentSessionId,
+            route: config.webhook.route,
+            metadata: {
+                userId: ""
+            }
+        }];
 
-    //     try {
-    //         const response = await fetch(config.webhook.url, {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json'
-    //             },
-    //             body: JSON.stringify(data)
-    //         });
+        try {
+            const response = await fetch(config.webhook.url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
 
-    //         const responseData = await response.json();
-    //         chatContainer.querySelector('.brand-header').style.display = 'none';
-    //         chatContainer.querySelector('.new-conversation').style.display = 'none';
-    //         chatInterface.classList.add('active');
+            const responseData = await response.json();
+            chatContainer.querySelector('.brand-header').style.display = 'none';
+            chatContainer.querySelector('.new-conversation').style.display = 'none';
+            chatInterface.classList.add('active');
 
-    //         const botMessageDiv = document.createElement('div');
-    //         botMessageDiv.className = 'chat-message bot';
-    //         botMessageDiv.textContent = Array.isArray(responseData) ? responseData[0].output : responseData.output;
-    //         messagesContainer.appendChild(botMessageDiv);
-    //         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    //     } catch (error) {
-    //         console.error('Error:', error);
-    //     }
-    // }
-
-async function startNewConversation() {
-  if (isStarting) return; // debounce
-  isStarting = true;
-
-  currentSessionId = generateUUID();
-  const data = [{
-    action: "loadPreviousSession",
-    sessionId: currentSessionId,
-    route: config.webhook.route,
-    metadata: { userId: "" }
-  }];
-
-  try {
-    const responseData = await postToWebhook(config.webhook.url, data);
-
-    // Show chat UI
-    chatContainer.querySelector('.brand-header').style.display = 'none';
-    chatContainer.querySelector('.new-conversation').style.display = 'none';
-    chatInterface.classList.add('active');
-
-    // Try previous content first
-    const maybe = extractOutput(responseData);
-    if (maybe) {
-      appendBotMessage(messagesContainer, maybe);
-      isStarting = false;
-      return;
+            const botMessageDiv = document.createElement('div');
+            botMessageDiv.className = 'chat-message bot';
+            botMessageDiv.textContent = Array.isArray(responseData) ? responseData[0].output : responseData.output;
+            messagesContainer.appendChild(botMessageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } catch (error) {
+            console.error('Error:', error);
+        }
     }
 
-    // No previous content? Trigger backend initial message silently.
-    const initPayload = {
-      action: "sendMessage",
-      sessionId: currentSessionId,
-      route: config.webhook.route,
-      chatInput: "__init__",
-      metadata: { userId: "" }
-    };
+    async function sendMessage(message) {
+        const messageData = {
+            action: "sendMessage",
+            sessionId: currentSessionId,
+            route: config.webhook.route,
+            chatInput: message,
+            metadata: {
+                userId: ""
+            }
+        };
 
-    const initRes = await postToWebhook(config.webhook.url, initPayload);
-    const initOut = extractOutput(initRes);
-    appendBotMessage(messagesContainer, initOut);
-  } catch (error) {
-    console.error('Error:', error);
-  } finally {
-    isStarting = false;
-  }
-}
+        const userMessageDiv = document.createElement('div');
+        userMessageDiv.className = 'chat-message user';
+        userMessageDiv.textContent = message;
+        messagesContainer.appendChild(userMessageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-    // async function sendMessage(message) {
-    //     const messageData = {
-    //         action: "sendMessage",
-    //         sessionId: currentSessionId,
-    //         route: config.webhook.route,
-    //         chatInput: message,
-    //         metadata: {
-    //             userId: ""
-    //         }
-    //     };
-
-    //     const userMessageDiv = document.createElement('div');
-    //     userMessageDiv.className = 'chat-message user';
-    //     userMessageDiv.textContent = message;
-    //     messagesContainer.appendChild(userMessageDiv);
-    //     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-    //     try {
-    //         const response = await fetch(config.webhook.url, {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json'
-    //             },
-    //             body: JSON.stringify(messageData)
-    //         });
+        try {
+            const response = await fetch(config.webhook.url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(messageData)
+            });
             
-    //         const data = await response.json();
+            const data = await response.json();
             
-    //         const botMessageDiv = document.createElement('div');
-    //         botMessageDiv.className = 'chat-message bot';
-    //         botMessageDiv.textContent = Array.isArray(data) ? data[0].output : data.output;
-    //         messagesContainer.appendChild(botMessageDiv);
-    //         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    //     } catch (error) {
-    //         console.error('Error:', error);
-    //     }
-    // }
-
-    async function sendMessage(message, { silentUser = false } = {}) {
-  const messageData = {
-    action: "sendMessage",
-    sessionId: currentSessionId,
-    route: config.webhook.route,
-    chatInput: message,
-    metadata: { userId: "" }
-  };
-
-  // Only render the user bubble if not silent
-  if (!silentUser) {
-    const userMessageDiv = document.createElement('div');
-    userMessageDiv.className = 'chat-message user';
-    userMessageDiv.textContent = message;
-    messagesContainer.appendChild(userMessageDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  }
-
-  try {
-    const data = await postToWebhook(config.webhook.url, messageData);
-    const out = extractOutput(data);
-    appendBotMessage(messagesContainer, out); // guarded append (won't add empty bubble)
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
+            const botMessageDiv = document.createElement('div');
+            botMessageDiv.className = 'chat-message bot';
+            botMessageDiv.textContent = Array.isArray(data) ? data[0].output : data.output;
+            messagesContainer.appendChild(botMessageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
 
     newChatBtn.addEventListener('click', startNewConversation);
     
