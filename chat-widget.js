@@ -399,14 +399,20 @@
 
     async function startNewConversation() {
         currentSessionId = generateUUID();
-        const data = [{
-            action: "loadPreviousSession",
-            sessionId: currentSessionId,
-            route: config.webhook.route,
-            metadata: {
-                userId: ""
-            }
-        }];
+        // const data = [{
+        //     action: "loadPreviousSession",
+        //     sessionId: currentSessionId,
+        //     route: config.webhook.route,
+        //     metadata: {
+        //         userId: ""
+        //     }
+        // }];
+        const data = {
+  action: "loadPreviousSession",
+  sessionId: currentSessionId,
+  route: config.webhook.route,
+  metadata: { userId: "" }
+};
 
         try {
             const response = await fetch(config.webhook.url, {
