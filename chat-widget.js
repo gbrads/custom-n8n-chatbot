@@ -391,18 +391,59 @@
     const textarea = chatContainer.querySelector('textarea');
     const sendButton = chatContainer.querySelector('button[type="submit"]');
 
-    function extractOutput(data) {
+function stripToPlainText(raw) {
+  if (raw == null) return '';
+  // Coerce to string, remove zero-width & non-breaking spaces, trim
+  let s = String(raw)
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '') // zero-width chars
+    .trim();
+
+  // If it looks like HTML, strip tags to see if anything remains
+  if (/<[a-z][\s\S]*>/i.test(s)) {
+    const div = document.createElement('div');
+    div.innerHTML = s;
+    s = (div.textContent || div.innerText || '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+  }
+
+  // Collapse leftover whitespace
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
+}
+
+function extractOutput(data) {
   if (!data) return '';
+
+  // Array shape
   if (Array.isArray(data) && data.length) {
     const d = data[0] || {};
-    return (d.output ?? d.text ?? d.message ?? '').toString();
+    // Common n8n shapes: output | text | message | messages[0].text/content
+    const direct = d.output ?? d.text ?? d.message ?? '';
+    if (direct) return stripToPlainText(direct);
+
+    if (Array.isArray(d.messages) && d.messages.length) {
+      const m0 = d.messages[0] || {};
+      return stripToPlainText(m0.text ?? m0.content ?? '');
+    }
+    return '';
   }
-  return (data.output ?? data.text ?? data.message ?? '').toString();
+
+  // Object shape
+  const direct = data.output ?? data.text ?? data.message ?? '';
+  if (direct) return stripToPlainText(direct);
+
+  if (Array.isArray(data.messages) && data.messages.length) {
+    const m0 = data.messages[0] || {};
+    return stripToPlainText(m0.text ?? m0.content ?? '');
+  }
+
+  return '';
 }
 
 function appendBotMessage(messagesContainer, text) {
-  const clean = (text || '').trim();
-  if (!clean) return; // never append empty bubbles
+  const clean = stripToPlainText(text);
+  if (!clean) return; // <- never append empty/whitespace/<br> bubbles
+
   const botMessageDiv = document.createElement('div');
   botMessageDiv.className = 'chat-message bot';
   botMessageDiv.textContent = clean;
@@ -418,6 +459,7 @@ async function postToWebhook(url, payload) {
   });
   return res.json();
 }
+
 
     function generateUUID() {
         return crypto.randomUUID();
