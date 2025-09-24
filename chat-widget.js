@@ -489,9 +489,22 @@
         }
     });
     
-    toggleButton.addEventListener('click', () => {
-        chatContainer.classList.toggle('open');
-    });
+    // toggleButton.addEventListener('click', () => {
+    //     chatContainer.classList.toggle('open');
+    // });
+
+
+    let conversationStarted = false;
+
+toggleButton.addEventListener('click', () => {
+    chatContainer.classList.toggle('open');
+    if (chatContainer.classList.contains('open') && !conversationStarted) {
+        startNewConversation();
+        conversationStarted = true;
+    }
+});
+
+    
 
     // Add close button handlers
     const closeButtons = chatContainer.querySelectorAll('.close-button');
